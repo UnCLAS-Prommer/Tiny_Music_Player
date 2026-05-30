@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     int start_pos = 0;
     //cout << "Path: ";
     //getline(cin, path);
-    QString filename = QFileDialog::getOpenFileName(&Mainwindow, "Open File", "V:", "Music (*.mp3 *.aac *.flac *.ape *.wav)");
+    QString filename = QFileDialog::getOpenFileName(&Mainwindow, "Open File", "", "Music (*.mp3 *.aac *.flac *.ape *.wav)");
     mp->setMediaFile(filename);
     path = filename.toStdString();
     //music = _wfopen(path.c_str(), "rb");

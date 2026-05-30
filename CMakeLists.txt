@@ -8,13 +8,11 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(QT_USE_QTMULTIMEDIA TRUE)
-SET(QT_USE_QTMULTIMEDIAWIDGETS TRUE)
-set(Qt5_DIR "Z:/Qt/Qt5.14.2/5.14.2/mingw73_64/lib/cmake/Qt5")
-find_package(Qt5 COMPONENTS Widgets MultimediaWidgets Multimedia LinguistTools REQUIRED)
+set(Qt6_DIR "C:/Qt/6.8.3/mingw_64/lib/cmake/Qt6")
+find_package(Qt6 COMPONENTS Widgets MultimediaWidgets Multimedia LinguistTools REQUIRED)
 
 set(TS_FILES untitled_zh_CN.ts)
 
@@ -29,6 +27,21 @@ add_executable(Player
     ${TS_FILES}
   )
 
-target_link_libraries(Player PRIVATE Qt5::Widgets Qt5::Multimedia Qt5::MultimediaWidgets)
+target_link_libraries(Player PRIVATE Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets)
 
-qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+# ---------- 自动部署 Qt6 DLL 到 build 目录 ----------
+# 从 Qt6_DIR 反推 windeployqt.exe 路径
+get_filename_component(QT6_BIN_DIR "${Qt6_DIR}/../../../bin" ABSOLUTE)
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT6_BIN_DIR}" REQUIRED)
+
+add_custom_command(TARGET Player POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Deploying Qt6 DLLs..."
+    COMMAND ${WINDEPLOYQT_EXECUTABLE}
+        --no-translations          # 已有自己的翻译文件
+        --no-system-d3d-compiler   # 不需要 D3D 编译器
+        --no-opengl-sw             # 不需要 OpenGL 软件渲染
+        "$<TARGET_FILE:Player>"
+    COMMENT "Running windeployqt..."
+)
+
+qt6_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

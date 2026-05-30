@@ -3,11 +3,9 @@
 #include <Qstring>
 #include <QtMultimedia/QMediaPlayer>
 #include <QtMultimedia/QAudioOutput>
-#include <QtMultimedia/QMediaPlaylist>
 #include <QUrl>
 #include <QObject>
 #include <QtGlobal>
-#include <QMediaObject>
 #include <iostream>
 #include <QtMultimedia/QMediaMetaData>
 using namespace std;
@@ -17,7 +15,6 @@ class MediaPlayer : public QObject
 public:
     QMediaPlayer *player = new QMediaPlayer;
     QAudioOutput *audioOutput = new QAudioOutput;
-    QMediaPlaylist *playlist = new QMediaPlaylist;
     qint64 media_duration = 0;
     int last_pos = 0;
 private:
@@ -29,9 +26,10 @@ signals:
 public slots:
     void setMediaFile(QString MediaFile)
     {
-        player->setMedia(QUrl::fromLocalFile(MediaFile));
-        QObject::connect(player, SIGNAL(metaDataAvailableChanged(bool)), this, SLOT(get_duration(bool)));
-        player->setVolume(30);
+        player->setAudioOutput(audioOutput);
+        player->setSource(QUrl::fromLocalFile(MediaFile));
+        QObject::connect(player, SIGNAL(metaDataChanged()), this, SLOT(get_duration()));
+        audioOutput->setVolume(0.3f);
     }
     void PlayPause()
     {
@@ -60,13 +58,13 @@ public slots:
         ;
     }
 private slots:
-    void get_duration(bool available) // ready the duration of the media file
+    void get_duration() // fetch media duration when metadata is ready
     {
-        if (available)
+        media_duration = player->duration();
+        if (media_duration > 0)
         {
-            media_duration = player->duration();
             cout << "Media duration: " << media_duration << endl;
-            emit duration_ready(media_duration); //send time to Main.h/TimerProgress class
+            emit duration_ready(media_duration);
             ready = true;
         }
     }
